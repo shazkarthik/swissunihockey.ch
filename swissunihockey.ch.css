@@ -1,0 +1,119 @@
+.swissunihockey-ch {
+    margin-right: 20px !important;
+}
+
+.swissunihockey-ch a {
+    border: 0 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.swissunihockey-ch h2 {
+    margin-top: 20px !important;
+}
+
+.swissunihockey-ch hr {
+    margin-top: 20px !important;
+}
+
+.swissunihockey-ch p {
+    margin: 20px 0 0 0 !important;
+}
+
+.swissunihockey-ch pre {
+    margin: 20px 0 0 0 !important;
+}
+
+.swissunihockey-ch table {
+    margin-top: 20px !important;
+}
+
+.swissunihockey-ch table tr td {
+    position: relative !important;
+}
+
+.swissunihockey-ch table tr td select {
+    width: 100% !important;
+}
+
+.swissunihockey-ch ul {
+    color: #777 !important;
+    line-height: 23px !important;
+    margin: 20px 0 0 0 !important;
+}
+
+.swissunihockey-ch .bordered {
+    border-collapse: collapse !important;
+}
+
+.swissunihockey-ch .bordered td {
+    border: 1px solid #e5e5e5 !important;
+    vertical-align: middle !important;
+}
+
+.swissunihockey-ch .bordered .top {
+    vertical-align: top !important;
+}
+
+.swissunihockey-ch .error {
+    margin: 20px 0 0 0 !important;
+}
+
+.swissunihockey-ch .error p {
+    margin: 10px 0 !important;
+}
+
+.swissunihockey-ch .icon {
+    text-decoration: none !important;
+}
+
+.swissunihockey-ch .line-through {
+    text-decoration: line-through !important;
+}
+
+.swissunihockey-ch .narrow {
+    white-space: nowrap !important;
+    width: 100px !important;
+}
+
+.swissunihockey-ch .pull-left {
+    float: left !important;
+}
+
+.swissunihockey-ch .submit {
+    margin: 20px 0 !important;
+    padding: 0 !important;
+}
+
+.swissunihockey-ch .text-center {
+    text-align: center !important;
+}
+
+.swissunihockey-ch .text-center a {
+    display: block !important;
+}
+
+.swissunihockey-ch .text-center a img {
+    display: inline-block !important;
+}
+
+.swissunihockey-ch .text-right {
+    text-align: right !important;
+}
+
+.swissunihockey-ch .updated {
+    margin: 20px 0 0 0 !important;
+}
+
+.swissunihockey-ch .updated p {
+    margin: 10px 0 !important;
+}
+
+.swissunihockey-ch .welcome-panel {
+    margin-top: 20px !important;
+    padding: 0 20px 20px 20px !important;
+}
+
+.swissunihockey-ch .wide {
+    width: 100% !important;
+}

@@ -1,0 +1,5 @@
+{
+    "require": {
+        "tedivm/stash": "^0.14.1"
+    }
+}
