@@ -137,6 +137,13 @@ function swissunihockey_ch_get_game($game_id, $with_events)
                 $status = 'Ongoing';
             }
         }
+        if(!$row['cells'][9]['text'][0]){
+            $referees = $row['cells'][8]['text'][0];
+        } elseif ($row['cells'][9]['text'][0]) {
+            $referees = $row['cells'][8]['text'][0]. "|" .$row['cells'][9]['text'][0];
+        } else {
+            $referees = "";
+        }
         $game = array(
             'id' => $game_id,
             'home' => array(
@@ -152,7 +159,7 @@ function swissunihockey_ch_get_game($game_id, $with_events)
             'status' => $status,
             'score' => $row['cells'][4]['text'],
             'place' => $row['cells'][7]['text'][0],
-            'referees' => $row['cells'][8]['text'][0]. "|" .$row['cells'][9]['text'][0],
+            'referees' => $referees,
             'spectators' => $row['cells'][10]['text'][0],
         );
         if ($with_events) {
