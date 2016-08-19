@@ -140,9 +140,9 @@ function swissunihockey_ch_get_game($game_id, $with_events)
         if(!$row['cells'][9]['text'][0]){
             $referees = $row['cells'][8]['text'][0];
         } elseif ($row['cells'][9]['text'][0]) {
-            $referees = $row['cells'][8]['text'][0]. "|" .$row['cells'][9]['text'][0];
+            $referees = $row['cells'][8]['text'][0]. '|' .$row['cells'][9]['text'][0];
         } else {
-            $referees = "";
+            $referees = '';
         }
         $game = array(
             'id' => $game_id,
