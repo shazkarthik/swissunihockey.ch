@@ -200,6 +200,7 @@ function swissunihockey_ch_get_game_events($game_id)
         $item->expiresAfter(60);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
     }
+
     return $game_events;
 }
 
