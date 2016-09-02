@@ -137,13 +137,14 @@ function swissunihockey_ch_get_game($game_id, $with_events)
                 $status = 'Ongoing';
             }
         }
-        if(!$row['cells'][9]['text'][0]){
-            $referees = $row['cells'][8]['text'][0];
-        } elseif ($row['cells'][9]['text'][0]) {
-            $referees = $row['cells'][8]['text'][0]. '|' .$row['cells'][9]['text'][0];
-        } else {
-            $referees = '';
+        $referees = array();
+        if (!$row['cells'][9]['text'][0]) {
+            $referees[] = $row['cells'][8]['text'][0];
         }
+        if ($row['cells'][9]['text'][0]) {
+            $referees[] = $row['cells'][9]['text'][0];
+        }
+        $referees = implode(' and ', $referees);
         $game = array(
             'id' => $game_id,
             'home' => array(
@@ -158,7 +159,7 @@ function swissunihockey_ch_get_game($game_id, $with_events)
             'time' => $row['cells'][6]['text'][0],
             'status' => $status,
             'score' => $row['cells'][4]['text'],
-            'place' => $row['cells'][7]['text'][0],
+            'location' => $row['cells'][7]['text'][0],
             'referees' => $referees,
             'spectators' => $row['cells'][10]['text'][0],
         );
@@ -191,16 +192,11 @@ function swissunihockey_ch_get_game_events($game_id)
         $home = $body['data']['tabs'][1]['text'];
         $game_events = array();
         foreach ($body['data']['regions'][0]['rows'] as $row) {
-            $score = explode(' ', $row['cells'][1]['text'][0]);
-            $score = explode(':', $score[1]);
-            $type = $row['cells'][2]['text'][0] === $home? 'Home': 'Away';
             $game_events[] = array(
-                'type' => $type,
-                'player' => $row['cells'][3]['text'][0],
                 'time' => $row['cells'][0]['text'][0],
-                'score' => $type === 'Home'? $score[0]: $score[1],
                 'event' => $row['cells'][1]['text'][0],
                 'team' => $row['cells'][2]['text'][0],
+                'player' => $row['cells'][3]['text'][0],
             );
         }
         $item->set($game_events);
@@ -607,23 +603,17 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                     ?>
                     <tr>
                         <td class="text-center">
-                            <a
-                                href="<?php echo $url; ?>"
-                                >
+                            <a href="<?php echo $url; ?>">
                                 <?php echo $game['date']. ' '. $game['time']; ?>
                             </a>
                         </td>
                         <td class="text-center">
-                            <a
-                                href="<?php echo $url; ?>"
-                                >
-                                <?php echo $game['place']; ?>
+                            <a href="<?php echo $url; ?>">
+                                <?php echo $game['location']; ?>
                             </a>
                         </td>
                         <td class="text-center">
-                            <a
-                                href="<?php echo $url; ?>"
-                                >
+                            <a href="<?php echo $url; ?>">
                                 <?php echo $game['home']['name']; ?>
                             </a>
                         </td>
@@ -648,16 +638,12 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                             </a>
                         </td>
                         <td class="text-center">
-                            <a
-                                href="<?php echo $url; ?>"
-                                >
+                            <a href="<?php echo $url; ?>">
                                 <?php echo $game['away']['name']; ?>
                             </a>
                         </td>
                         <td class="text-center">
-                            <a
-                                href="<?php echo $url; ?>"
-                                >
+                            <a href="<?php echo $url; ?>">
                                 <?php echo $game['score'][0]; ?>
                             </a>
                         </td>
@@ -726,7 +712,7 @@ function swissunihockey_ch_shortcode_2(
                     <p>
                         <?php echo $game['date']. ' '. $game['time']; ?>
                         <br>
-                        <?php echo $game['place']; ?>
+                        <?php echo $game['location']; ?>
                         <br>
                         <?php echo $game['referees']; ?>
                         <br>
