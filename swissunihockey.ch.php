@@ -20,9 +20,31 @@ $pool = new Stash\Pool($driver);
 
 $GLOBALS['swissunihockey.ch'] = array(
     'pool' => $pool,
-    'leagues' => array(),
-    'seasons' => array(),
 );
+
+function swissunihockey_ch_usort_leagues($a, $b)
+{
+    if ($a['text'] == $b['text']) {
+        return 0;
+    }
+    return ($a['text'] < $b['text'])? -1 : 1;
+}
+
+function swissunihockey_ch_usort_seasons($a, $b)
+{
+    if ($a['text'] == $b['text']) {
+        return 0;
+    }
+    return ($a['text'] < $b['text'])? -1 : 1;
+}
+
+function swissunihockey_ch_usort_games($a, $b)
+{
+    if ($a['timestamp'] == $b['timestamp']) {
+        return 0;
+    }
+    return ($a['timestamp'] < $b['timestamp'])? -1 : 1;
+}
 
 function swissunihockey_ch_get_leagues()
 {
@@ -34,13 +56,14 @@ function swissunihockey_ch_get_leagues()
             'https://api-v2.swissunihockey.ch/api/leagues'
         );
         $body = json_decode($response['body'], true);
-        foreach ($body['entries'] as $entry) {
+        foreach ((array) $body['entries'] as $entry) {
             $leagues[] = array(
+                'league' => (string) $entry['set_in_context']['league'],
+                'game_class' => (string) $entry['set_in_context']['game_class'],
                 'text' => $entry['text'],
-                'game_class' => $entry['set_in_context']['game_class'],
-                'league' => $entry['set_in_context']['league'],
             );
         }
+        usort($leagues, 'swissunihockey_ch_usort_leagues');
         $item->set($leagues);
         $item->expiresAfter(86400);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
@@ -59,12 +82,13 @@ function swissunihockey_ch_get_seasons()
             'https://api-v2.swissunihockey.ch/api/seasons'
         );
         $body = json_decode($response['body'], true);
-        foreach ($body['entries'] as $entry) {
+        foreach ((array) $body['entries'] as $entry) {
             $seasons[] = array(
-                'text' => $entry['text'],
                 'season' => (string) $entry['set_in_context']['season'],
+                'text' => $entry['text'],
             );
         }
+        usort($seasons, 'swissunihockey_ch_usort_seasons');
         $item->set($seasons);
         $item->expiresAfter(86400);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
@@ -73,10 +97,10 @@ function swissunihockey_ch_get_seasons()
     return $seasons;
 }
 
-function swissunihockey_ch_get_games($league, $season, $game_class, $round)
+function swissunihockey_ch_get_games($league, $game_class, $season, $round)
 {
     $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
-        sprintf('games/%s/%s/%s/%s', $league, $season, $game_class, $round)
+        sprintf('games/%s/%s/%s/%s', $league, $game_class, $season, $round)
     );
     $games = $item->get();
     if ($item->isMiss()) {
@@ -100,10 +124,11 @@ function swissunihockey_ch_get_games($league, $season, $game_class, $round)
             ),
             'items' => array(),
         );
-        foreach ($body['data']['regions'][0]['rows'] as $row) {
+        foreach ((array) $body['data']['regions'][0]['rows'] as $row) {
             $game_id = $row['cells'][0]['link']['ids'][0];
             $games['items'][] = swissunihockey_ch_get_game($game_id, false);
         }
+        usort($games['items'], 'swissunihockey_ch_usort_games');
         $item->set($games);
         $item->expiresAfter(86400);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
@@ -124,10 +149,9 @@ function swissunihockey_ch_get_game($game_id, $with_events)
         );
         $body = json_decode($response['body'], true);
         $row = $body['data']['regions'][0]['rows'][0];
-        $names = array(
-            'home' => $row['cells'][1]['text'][0],
-            'away' => $row['cells'][3]['text'][0],
-        );
+        $date = $row['cells'][5]['text'][0];
+        $time = $row['cells'][6]['text'][0];
+        $timestamp = strtotime(sprintf('%s %s:00', $date, $time));
         $hours_since_start = $row['debug']['hours_since_start'];
         $status = 'Not yet started';
         if ($hours_since_start > 0.0) {
@@ -148,15 +172,16 @@ function swissunihockey_ch_get_game($game_id, $with_events)
         $game = array(
             'id' => $game_id,
             'home' => array(
-                'name' => $names['home'],
+                'name' => $row['cells'][1]['text'][0],
                 'logo' => $row['cells'][0]['image']['url'],
             ),
             'away' => array(
-                'name' => $names['away'],
+                'name' => $row['cells'][3]['text'][0],
                 'logo' => $row['cells'][2]['image']['url'],
             ),
-            'date' => $row['cells'][5]['text'][0],
-            'time' => $row['cells'][6]['text'][0],
+            'date' => $date,
+            'time' => $time,
+            'timestamp' => $timestamp,
             'status' => $status,
             'score' => $row['cells'][4]['text'],
             'location' => $row['cells'][7]['text'][0],
@@ -191,7 +216,7 @@ function swissunihockey_ch_get_game_events($game_id)
         $body = json_decode($response['body'], true);
         $home = $body['data']['tabs'][1]['text'];
         $game_events = array();
-        foreach ($body['data']['regions'][0]['rows'] as $row) {
+        foreach ((array) $body['data']['regions'][0]['rows'] as $row) {
             $game_events[] = array(
                 'time' => $row['cells'][0]['text'][0],
                 'event' => $row['cells'][1]['text'][0],
@@ -213,8 +238,8 @@ function swissunihockey_ch_get_url($array)
     $url = remove_query_arg(
         array(
             'league',
-            'season',
             'game_class',
+            'season',
             'round',
             'game_id',
         ),
@@ -334,7 +359,6 @@ function swissunihockey_ch_options()
 
     $leagues = swissunihockey_ch_get_leagues();
     $seasons = swissunihockey_ch_get_seasons();
-
     ?>
     <div class="swissunihockey-ch">
         <h2>swissunihockey.ch :: Options</h2>
@@ -367,7 +391,14 @@ function swissunihockey_ch_options()
                                     <?php endif; ?>
                                     value="<?php echo $value; ?>"
                                     >
-                                    <?php echo $league['text'];?>
+                                    <?php
+                                    echo sprintf(
+                                        '%s (%s/%s)',
+                                        $league['text'],
+                                        $league['league'],
+                                        $league['game_class']
+                                    );
+                                    ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -432,23 +463,23 @@ function swissunihockey_ch_shortcode()
     if ($pane === '1') {
         swissunihockey_ch_shortcode_1(
             $_REQUEST['league']? $_REQUEST['league']: '',
-            $_REQUEST['season']? $_REQUEST['season']: '',
             $_REQUEST['game_class']? $_REQUEST['game_class']: '',
+            $_REQUEST['season']? $_REQUEST['season']: '',
             $_REQUEST['round']? $_REQUEST['round']: ''
         );
     }
     if ($pane === '2') {
         swissunihockey_ch_shortcode_2(
             $_REQUEST['league']? $_REQUEST['league']: '',
-            $_REQUEST['season']? $_REQUEST['season']: '',
             $_REQUEST['game_class']? $_REQUEST['game_class']: '',
+            $_REQUEST['season']? $_REQUEST['season']: '',
             $_REQUEST['round']? $_REQUEST['round']: '',
             $_REQUEST['game_id']? $_REQUEST['game_id']: ''
         );
     }
 }
 
-function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
+function swissunihockey_ch_shortcode_1($league, $game_class, $season, $round)
 {
     if (!$league or !$game_class) {
         $league_game_class = $_REQUEST['league_game_class']?
@@ -465,8 +496,9 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
 
     $leagues = swissunihockey_ch_get_leagues();
     $seasons = swissunihockey_ch_get_seasons();
+
     $games = swissunihockey_ch_get_games(
-        $league, $season, $game_class, $round
+        $league, $game_class, $season, $round
     );
     ?>
     <link
@@ -515,7 +547,14 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                                     <?php endif; ?>
                                     value="<?php echo $value; ?>"
                                     >
-                                    <?php echo $l['text'];?>
+                                    <?php
+                                    echo sprintf(
+                                        '%s (%s/%s)',
+                                        $l['text'],
+                                        $l['league'],
+                                        $l['game_class']
+                                    );
+                                    ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -560,8 +599,8 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                         array(
                             'pane' => '1',
                             'league' => $league,
-                            'season' => $season,
                             'game_class' => $game_class,
+                            'season' => $season,
                             'round' => $games['round']['previous'],
                         )
                     ); ?>"
@@ -575,8 +614,8 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                         array(
                             'pane' => '1',
                             'league' => $league,
-                            'season' => $season,
                             'game_class' => $game_class,
+                            'season' => $season,
                             'round' => $games['round']['next'],
                         )
                     ); ?>"
@@ -594,8 +633,8 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                         array(
                             'pane' => '2',
                             'league' => $league,
-                            'season' => $season,
                             'game_class' => $game_class,
+                            'season' => $season,
                             'round' => $round,
                             'game_id' => $game['id'],
                         )
@@ -674,8 +713,8 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
 
 function swissunihockey_ch_shortcode_2(
     $league,
-    $season,
     $game_class,
+    $season,
     $round,
     $game_id
 ) {
@@ -689,8 +728,8 @@ function swissunihockey_ch_shortcode_2(
                     array(
                         'pane' => '1',
                         'league' => $league,
-                        'season' => $season,
                         'game_class' => $game_class,
+                        'season' => $season,
                         'round' => $round,
                     )
                 );
