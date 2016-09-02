@@ -25,11 +25,17 @@
 }
 
 .swissunihockey-ch table {
+    font-size:small !important;
     margin-top: 20px !important;
 }
 
 .swissunihockey-ch table tr td {
     position: relative !important;
+}
+
+.swissunihockey-ch table tr td label {
+    font-size:large !important;
+    margin-top: 20px !important;
 }
 
 .swissunihockey-ch table tr td select {

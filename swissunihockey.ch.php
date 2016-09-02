@@ -137,6 +137,13 @@ function swissunihockey_ch_get_game($game_id, $with_events)
                 $status = 'Ongoing';
             }
         }
+        if(!$row['cells'][9]['text'][0]){
+            $referees = $row['cells'][8]['text'][0];
+        } elseif ($row['cells'][9]['text'][0]) {
+            $referees = $row['cells'][8]['text'][0]. '|' .$row['cells'][9]['text'][0];
+        } else {
+            $referees = '';
+        }
         $game = array(
             'id' => $game_id,
             'home' => array(
@@ -150,7 +157,10 @@ function swissunihockey_ch_get_game($game_id, $with_events)
             'date' => $row['cells'][5]['text'][0],
             'time' => $row['cells'][6]['text'][0],
             'status' => $status,
-            'score' => $row['cells'][4]['text'][0],
+            'score' => $row['cells'][4]['text'],
+            'place' => $row['cells'][7]['text'][0],
+            'referees' => $referees,
+            'spectators' => $row['cells'][10]['text'][0],
         );
         if ($with_events) {
             $game_events = swissunihockey_ch_get_game_events($game_id);
@@ -181,17 +191,17 @@ function swissunihockey_ch_get_game_events($game_id)
         $home = $body['data']['tabs'][1]['text'];
         $game_events = array();
         foreach ($body['data']['regions'][0]['rows'] as $row) {
-            if (strpos($row['cells'][1]['text'][0], 'Torschütze') !== false) {
-                $score = explode(' ', $row['cells'][1]['text'][0]);
-                $score = explode(':', $score[1]);
-                $type = $row['cells'][2]['text'][0] === $home? 'Home': 'Away';
-                $game_events[] = array(
-                    'type' => $type,
-                    'player' => $row['cells'][3]['text'][0],
-                    'time' => $row['cells'][0]['text'][0],
-                    'score' => $type === 'Home'? $score[0]: $score[1],
-                );
-            }
+            $score = explode(' ', $row['cells'][1]['text'][0]);
+            $score = explode(':', $score[1]);
+            $type = $row['cells'][2]['text'][0] === $home? 'Home': 'Away';
+            $game_events[] = array(
+                'type' => $type,
+                'player' => $row['cells'][3]['text'][0],
+                'time' => $row['cells'][0]['text'][0],
+                'score' => $type === 'Home'? $score[0]: $score[1],
+                'event' => $row['cells'][1]['text'][0],
+                'team' => $row['cells'][2]['text'][0],
+            );
         }
         $item->set($game_events);
         $item->expiresAfter(60);
@@ -599,6 +609,27 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                         <td class="text-center">
                             <a
                                 href="<?php echo $url; ?>"
+                                >
+                                <?php echo $game['date']. ' '. $game['time']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                href="<?php echo $url; ?>"
+                                >
+                                <?php echo $game['place']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                href="<?php echo $url; ?>"
+                                >
+                                <?php echo $game['home']['name']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                href="<?php echo $url; ?>"
                                 title="<?php echo $game['home']['name']; ?>"
                                 >
                                 <img
@@ -617,12 +648,23 @@ function swissunihockey_ch_shortcode_1($league, $season, $game_class, $round)
                             </a>
                         </td>
                         <td class="text-center">
-                            <a href="<?php echo $url; ?>">
-                                <?php echo $game['score']; ?>
+                            <a
+                                href="<?php echo $url; ?>"
+                                >
+                                <?php echo $game['away']['name']; ?>
                             </a>
                         </td>
                         <td class="text-center">
-                            <a class="icon" href="<?php echo $url; ?>">
+                            <a
+                                href="<?php echo $url; ?>"
+                                >
+                                <?php echo $game['score'][0]; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                class="icon" href="<?php echo $url; ?>"
+                                >
                                 <?php if ($status === 'Not yet started') : ?>
                                     <i class="fa fa-clock-o"></i>
                                 <?php endif; ?>
@@ -676,35 +718,40 @@ function swissunihockey_ch_shortcode_2(
                         alt="<?php echo $game['home']['name']; ?>"
                         src="<?php echo $game['home']['logo']; ?>"
                         >
+                        <br><?php echo $game['home']['name']; ?>
                 </td>
-                <td class="narrow text-center">
-                    <?php echo $game['score']; ?>
+                <td class="text-center" width="50%">
+                    <h1><?php echo $game['score'][0]; ?></h1>
+                    <?php echo $game['score'][1]; ?>
+                    <p>
+                        <?php echo $game['date']. ' '. $game['time']; ?>
+                        <br>
+                        <?php echo $game['place']; ?>
+                        <br>
+                        <?php echo $game['referees']; ?>
+                        <br>
+                        <?php echo $game['spectators']; ?>
+                    </p>
                 </td>
                 <td class="text-center">
                     <img
                         alt="<?php echo $game['away']['name']; ?>"
                         src="<?php echo $game['away']['logo']; ?>"
                         >
+                        <br><?php echo $game['away']['name']; ?>
                 </td>
             </tr>
             <?php foreach ($game['events'] as $event) : ?>
                 <tr>
-                    <td class="text-right">
-                        <?php if ($event['type'] === 'Home') : ?>
-                            <?php echo $event['player']; ?>
-                            -
-                            <?php echo $event['score']; ?>
-                        <?php endif; ?>
-                    </td>
-                    <td class="narrow text-center">
+                    <td class="text-center">
                         <?php echo $event['time']; ?>
+                        <?php echo $event['event']; ?>
                     </td>
-                    <td>
-                        <?php if ($event['type'] === 'Away') : ?>
-                            <?php echo $event['score']; ?>
-                            -
-                            <?php echo $event['player']; ?>
-                        <?php endif; ?>
+                    <td class="text-center">
+                        <?php echo $event['team']; ?>
+                    </td>
+                    <td class="text-center">
+                        <?php echo $event['player']; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
