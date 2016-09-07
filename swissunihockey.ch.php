@@ -162,7 +162,7 @@ function swissunihockey_ch_get_game($game_id, $with_events)
             }
         }
         $referees = array();
-        if (!$row['cells'][9]['text'][0]) {
+        if ($row['cells'][8]['text'][0]) {
             $referees[] = $row['cells'][8]['text'][0];
         }
         if ($row['cells'][9]['text'][0]) {
