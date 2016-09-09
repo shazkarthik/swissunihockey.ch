@@ -38,6 +38,14 @@ function swissunihockey_ch_usort_seasons($a, $b)
     return ($a['text'] < $b['text'])? -1 : 1;
 }
 
+function swissunihockey_ch_usort_table($a, $b)
+{
+    if ($a['rank'] == $b['rank']) {
+        return 0;
+    }
+    return ($a['rank'] < $b['rank'])? -1 : 1;
+}
+
 function swissunihockey_ch_usort_games($a, $b)
 {
     if ($a['timestamp'] == $b['timestamp']) {
@@ -97,6 +105,54 @@ function swissunihockey_ch_get_seasons()
     return $seasons;
 }
 
+function swissunihockey_ch_get_table($league, $game_class, $season)
+{
+    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+        sprintf('table/%s/%s/%s', $league, $game_class, $season)
+    );
+    $table = $item->get();
+    if ($item->isMiss()) {
+        $table = array();
+        $response = wp_remote_get(
+            sprintf(
+                'https://api-v2.swissunihockey.ch/api/rankings'.
+                '?league=%s&game_class=%s&season=%s',
+                $league,
+                $game_class,
+                $season
+            )
+        );
+        $body = json_decode($response['body'], true);
+        foreach ((array) $body['data']['regions'][0]['rows'] as $row) {
+            $rank = $row['cells'][0]['text'][0];
+            if (!$rank) {
+                continue;
+            }
+            $table[] = array(
+                'rank' => $rank,
+                'logo' => $row['cells'][1]['image']['url'],
+                'name' => $row['cells'][2]['text'][0],
+                'games' => array(
+                    'total' => $row['cells'][3]['text'][0],
+                    'wins' => $row['cells'][4]['text'][0],
+                    'wins_overtime' => $row['cells'][5]['text'][0],
+                    'losses' => $row['cells'][7]['text'][0],
+                    'losses_overtime' => $row['cells'][6]['text'][0],
+                    'time' => $row['cells'][8]['text'][0],
+                    'goals' => $row['cells'][9]['text'][0],
+                    'points' => $row['cells'][10]['text'][0],
+                ),
+            );
+        }
+        usort($table, 'swissunihockey_ch_usort_table');
+        $item->set($table);
+        $item->expiresAfter(86400);
+        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+    }
+
+    return $table;
+}
+
 function swissunihockey_ch_get_games($league, $game_class, $season, $round)
 {
     $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
@@ -107,10 +163,10 @@ function swissunihockey_ch_get_games($league, $game_class, $season, $round)
         $response = wp_remote_get(
             sprintf(
                 'https://api-v2.swissunihockey.ch/api/games'.
-                '?league=%s&season=%s&game_class=%s&round=%s&mode=list',
+                '?league=%s&game_class=%s&season=%s&round=%s&mode=list',
                 $league,
-                $season,
                 $game_class,
+                $season,
                 $round
             )
         );
@@ -457,7 +513,7 @@ function swissunihockey_ch_faq()
 function swissunihockey_ch_shortcode()
 {
     $pane = $_REQUEST['pane']? $_REQUEST['pane']: '';
-    if ($pane !== '1' and $pane !== '2') {
+    if ($pane !== '1' and $pane !== '2' and $pane !== '3') {
         $pane = '1';
     }
     if ($pane === '1') {
@@ -475,6 +531,14 @@ function swissunihockey_ch_shortcode()
             $_REQUEST['season']? $_REQUEST['season']: '',
             $_REQUEST['round']? $_REQUEST['round']: '',
             $_REQUEST['game_id']? $_REQUEST['game_id']: ''
+        );
+    }
+    if ($pane === '3') {
+        swissunihockey_ch_shortcode_3(
+            $_REQUEST['league']? $_REQUEST['league']: '',
+            $_REQUEST['game_class']? $_REQUEST['game_class']: '',
+            $_REQUEST['season']? $_REQUEST['season']: '',
+            $_REQUEST['round']? $_REQUEST['round']: ''
         );
     }
 }
@@ -499,6 +563,14 @@ function swissunihockey_ch_shortcode_1($league, $game_class, $season, $round)
 
     $games = swissunihockey_ch_get_games(
         $league, $game_class, $season, $round
+    );
+
+    $url = array(
+        'pane' => '3',
+        'league' => $league,
+        'game_class' => $game_class,
+        'season' => $season,
+        'round' => $round,
     );
     ?>
     <link
@@ -580,7 +652,11 @@ function swissunihockey_ch_shortcode_1($league, $game_class, $season, $round)
                     </td>
                 </tr>
                 <tr>
-                    <td></td>
+                    <td>
+                        <a
+                            href="<?php echo swissunihockey_ch_get_url($url); ?>"
+                            >Table</a>
+                    </td>
                     <td class="text-right">
                         <input
                             class="button-primary"
@@ -643,7 +719,7 @@ function swissunihockey_ch_shortcode_1($league, $game_class, $season, $round)
                     <tr>
                         <td class="text-center">
                             <a href="<?php echo $url; ?>">
-                                <?php echo $game['date']. ' '. $game['time']; ?>
+                                <?php echo $game['date'] . ' ' . $game['time']; ?>
                             </a>
                         </td>
                         <td class="text-center">
@@ -749,7 +825,7 @@ function swissunihockey_ch_shortcode_2(
                     <h1><?php echo $game['score'][0]; ?></h1>
                     <?php echo $game['score'][1]; ?>
                     <p>
-                        <?php echo $game['date']. ' '. $game['time']; ?>
+                        <?php echo $game['date'] . ' ' . $game['time']; ?>
                         <br>
                         <?php echo $game['location']; ?>
                         <br>
@@ -777,6 +853,80 @@ function swissunihockey_ch_shortcode_2(
                     </td>
                     <td class="text-center">
                         <?php echo $event['player']; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+    <?php
+}
+
+function swissunihockey_ch_shortcode_3($league, $game_class, $season, $round) {
+    $table = swissunihockey_ch_get_table($league, $game_class, $season);
+    ?>
+    <div class="swissunihockey-ch">
+        <p>
+            <a
+                href="<?php
+                echo swissunihockey_ch_get_url(
+                    array(
+                        'pane' => '1',
+                        'league' => $league,
+                        'game_class' => $game_class,
+                        'season' => $season,
+                        'round' => $round,
+                    )
+                );
+                ?>"
+                >Back</a>
+        </p>
+        <table class="table">
+            <tr>
+                <th class="text-right">Rg.</th>
+                <th class="text-center" colspan="2">Team</th>
+                <th class="text-right">Sp</th>
+                <th class="text-right">S</th>
+                <th class="text-right">SnV</th>
+                <th class="text-right">NnV</th>
+                <th class="text-right">N</th>
+                <th class="text-right">T</th>
+                <th class="text-right">TD</th>
+                <th class="text-right">P</th>
+            </tr>
+            <?php foreach ($table as $row) : ?>
+                <tr>
+                    <td class="text-right">
+                        <?php echo $row['rank']; ?>
+                    </td>
+                    <td class="text-center">
+                        <img src="<?php echo $row['logo']; ?>">
+                    </td>
+                    <td class="text-center">
+                        <?php echo $row['name']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['total']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['wins']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['wins_overtime']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['losses_overtime']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['losses']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['time']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['goals']; ?>
+                    </td>
+                    <td class="text-right">
+                        <?php echo $row['games']['points']; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
