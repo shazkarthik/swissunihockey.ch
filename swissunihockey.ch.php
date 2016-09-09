@@ -568,7 +568,7 @@ function swissunihockey_ch_options()
                     </td>
                     <td>
                         <select id="team_id" name="team_id">
-                            <option value="0">All Teams</option>
+                            <option value="-1">All Teams</option>
                             <?php foreach ($clubs as $club) : ?>
                                 <optgroup label="<?php echo $club['text'];?>">
                                     <?php foreach ($club['teams'] as $team) : ?>
@@ -796,7 +796,7 @@ function swissunihockey_ch_shortcode_1(
                     </td>
                     <td>
                         <select id="team_id" name="team_id">
-                            <option value="0">All Teams</option>
+                            <option value="-1">All Teams</option>
                             <?php foreach ($clubs as $club) : ?>
                                 <optgroup label="<?php echo $club['text'];?>">
                                     <?php foreach ($club['teams'] as $team) : ?>
