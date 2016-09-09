@@ -89,7 +89,7 @@ function swissunihockey_ch_get_leagues()
         }
         usort($leagues, 'swissunihockey_ch_usort_leagues');
         $item->set($leagues);
-        $item->expiresAfter(86400);
+        $item->expiresAfter(864000);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
     }
 
@@ -114,7 +114,7 @@ function swissunihockey_ch_get_seasons()
         }
         usort($seasons, 'swissunihockey_ch_usort_seasons');
         $item->set($seasons);
-        $item->expiresAfter(86400);
+        $item->expiresAfter(864000);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
     }
 
@@ -141,7 +141,7 @@ function swissunihockey_ch_get_clubs()
         }
         usort($clubs, 'swissunihockey_ch_usort_clubs');
         $item->set($clubs);
-        $item->expiresAfter(86400);
+        $item->expiresAfter(864000);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
     }
 
@@ -171,7 +171,7 @@ function swissunihockey_ch_get_teams($club_id)
         }
         usort($teams, 'swissunihockey_ch_usort_teams');
         $item->set($teams);
-        $item->expiresAfter(86400);
+        $item->expiresAfter(864000);
         $GLOBALS['swissunihockey.ch']['pool']->save($item);
     }
 
