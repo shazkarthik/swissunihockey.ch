@@ -311,6 +311,7 @@ function swissunihockey_ch_get_game($game_id, $with_events)
                 'logo' => $row['cells'][2]['image']['url'],
             ),
             'date' => $date,
+            'league' => $body['data']['subtitle'],
             'time' => $time,
             'timestamp' => $timestamp,
             'status' => $status,
@@ -473,6 +474,11 @@ function swissunihockey_ch_options()
             true
         );
         update_option(
+            'swissunihockey_ch_club_id',
+            $_REQUEST['club_id'],
+            true
+        );
+        update_option(
             'swissunihockey_ch_team_id',
             $_REQUEST['team_id'],
             true
@@ -493,6 +499,7 @@ function swissunihockey_ch_options()
 
     $league_game_class = get_option('swissunihockey_ch_league_game_class');
     $season = get_option('swissunihockey_ch_season');
+    $club_id = get_option('swissunihockey_ch_club_id');
     $team_id = get_option('swissunihockey_ch_team_id');
 
     $leagues = swissunihockey_ch_get_leagues();
@@ -564,6 +571,25 @@ function swissunihockey_ch_options()
                 </tr>
                 <tr>
                     <td class="narrow">
+                        <label for="club_id">Default Club</label>
+                    </td>
+                    <td>
+                        <select id="team_id" name="club_id">
+                            <?php foreach ($clubs as $club) : ?>
+                                <option
+                                    <?php if ($club_id === $club['club_id']) : ?>
+                                        selected="selected"
+                                    <?php endif; ?>
+                                    value="<?php echo $club['club_id']; ?>"
+                                    >
+                                    <?php echo $club['text'];?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="narrow">
                         <label for="team_id">Default Club/Team</label>
                     </td>
                     <td>
@@ -620,7 +646,7 @@ function swissunihockey_ch_faq()
 function swissunihockey_ch_shortcode()
 {
     $pane = $_REQUEST['pane']? $_REQUEST['pane']: '';
-    if ($pane !== '1' and $pane !== '2' and $pane !== '3') {
+    if ($pane !== '1' and $pane !== '2' and $pane !== '3' and $pane !== '4' and $pane !== '5') {
         $pane = '1';
     }
     if ($pane === '1') {
@@ -651,6 +677,152 @@ function swissunihockey_ch_shortcode()
             $_REQUEST['round']? $_REQUEST['round']: ''
         );
     }
+    if ($pane === '4') {
+        swissunihockey_ch_shortcode_4(
+            isset($_REQUEST['team_id'])? $_REQUEST['team_id']: null
+        );
+    }
+    if ($pane === '5') {
+        swissunihockey_ch_shortcode_5(
+            isset($_REQUEST['season'])? $_REQUEST['season']: date('Y'),
+            isset($_REQUEST['page'])? $_REQUEST['page']: '1'
+        );
+    }
+}
+
+function swissunihockey_ch_get_games_of_club($season, $page) {
+    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+        sprintf('games/%s/%s/%s', get_option('swissunihockey_ch_club_id'), $season, $page)
+    );
+    $games = $item->get();
+    if ($item->isMiss()) {
+        $url = sprintf(
+            'https://api-v2.swissunihockey.ch/api/games?club_id=%s&season=%s&mode=club',
+            get_option('swissunihockey_ch_club_id'),
+            $season
+        );
+        if ($page !== '1') {
+            $url = sprintf('%s&page=%s', $url, $page);
+        }
+        $response = wp_remote_get($url);
+        $games = array(
+            'items' => array(),
+            'slider' => array(),
+        );
+        if (isset($response['body'])) {
+            $body = json_decode($response['body'], true);
+            $rows = $body['data']['regions'][0]['rows'];
+            foreach ($rows as $row) {
+                $status = 'Not yet started';
+                $now = strtotime('now');
+                $timestamp = strtotime(implode(' ', $row['cells'][0]['text']));
+                if ($timestamp > $now) {
+                    $status = 'Not yet started';
+                } else if (($now - $timestamp) < 7200) {
+                    $status = 'Ongoing';
+                } else {
+                    $status = 'Finished';
+                }
+                $games['items'][] = array(
+                    'game_id' => $row['link']['ids'][0],
+                    'game_class' => $row['cells'][2]['link']['ids'][2],
+                    'date' => $row['cells'][0]['text'][0],
+                    'time' => $row['cells'][0]['text'][1],
+                    'location' => implode(' - ', $row['cells'][1]['text']),
+                    'league' => $row['cells'][2]['text'][0],
+                    'league_id' => $row['cells'][2]['link']['ids'][1],
+                    'home' => $row['cells'][3]['text'][0],
+                    'away' => $row['cells'][4]['text'][0],
+                    'score' => $row['cells'][5]['text'][0],
+                    'status' => $status,
+                );
+            }
+            $games['slider'] = isset($body['data']['slider'])? $body['data']['slider']: array();
+        }
+        $item->set($games);
+        $item->expiresAfter(86400);
+        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+    }
+
+    return $games;
+}
+
+function swissunihockey_ch_display_next_three_games($team_id) {
+    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+        sprintf('games/%s/next-three-games/%s/%s', get_option('swissunihockey_ch_club_id'), date('Y'), $team_id)
+    );
+    $rows = $item->get();
+    if ($item->isMiss()) {
+        $response = array();
+        $rows = array();
+        if ($team_id !== '') {
+            $response = wp_remote_get(sprintf(
+                'https://api-v2.swissunihockey.ch/api/games?team_id=%s&season=%s&mode=team',
+                $team_id,
+                date('Y')
+            ));
+        } else {
+            $response = wp_remote_get(sprintf(
+                'https://api-v2.swissunihockey.ch/api/games?club_id=%s&season=%s&mode=club',
+                get_option('swissunihockey_ch_club_id'),
+                date('Y')
+            ));
+        }
+        if (isset($response['body'])) {
+            $body = json_decode($response['body'], true);
+            $rows = $body['data']['regions'][0]['rows'];
+        }
+        $item->set($rows);
+        $item->expiresAfter(86400);
+        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+    } ?>
+    <h1 class="text-center">Next 3 Games</h1>
+    <?php
+    foreach ($rows as $row):
+        $game = swissunihockey_ch_get_game($row['link']['ids'][0], false);
+        if ($game['status'] === 'Not yet started'): ?>
+            <?php
+                if ($index > 2) {
+                    break;
+                }
+                $index += 1;
+            ?>
+                <table class="table">
+                    <tr>
+                        <td class="text-center" colspan="3"><?php echo $game['league']; ?></td>
+                    </tr>
+                    <tr>
+                    <tr></tr>
+                        <td class="text-right">
+                            <img
+                                alt="<?php echo $game['home']['name']; ?>"
+                                src="<?php echo $game['home']['logo']; ?>"
+                                >
+                            <br/>
+                            <?php echo $game['home']['name']; ?>
+                        </td>
+                        <td class="text-center">-</td>
+                        <td class="text-right">
+                            <img
+                                alt="<?php echo $game['away']['name']; ?>"
+                                src="<?php echo $game['away']['logo']; ?>"
+                                >
+                            <br/>
+                            <?php echo $game['away']['name']; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" colspan="3">
+                            <?php echo $game['date']; ?> - <?php echo $game['time']; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" colspan="3"><?php echo $game['location']; ?></td>
+                    </tr>
+                </table>
+        <?php endif ; ?>
+    <?php endforeach ; ?>
+    <?php
 }
 
 function swissunihockey_ch_shortcode_1(
@@ -1108,6 +1280,295 @@ function swissunihockey_ch_shortcode_3(
         </table>
     </div>
     <?php
+}
+
+function swissunihockey_ch_shortcode_4($team_id='') {
+
+    $club_id = get_option('swissunihockey_ch_club_id');
+
+    ?>
+    <link
+        href="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery-tabs/jquery-ui.css"
+        rel="stylesheet"
+        >
+    <script src="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery/dist/jquery.js"></script>
+    <script src="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery-tabs/jquery-ui.js"></script>
+    <script type="text/javascript">
+        jQuery(function() {
+            jQuery('.swissunihockey-ch').find('#tabs').tabs();
+         });
+    </script>
+    <link
+        href="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/vendor/font-awesome/css/font-awesome.css"
+        rel="stylesheet"
+        >
+    <link
+        href="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/swissunihockey.ch.css"
+        rel="stylesheet"
+        >
+    <script
+        src="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/swissunihockey.ch.js"
+        ></script>
+    <div class="swissunihockey-ch">
+        <div id="tabs">
+            <ul>
+                <li>
+                    <a href="#All">
+                        All
+                    </a>
+                </li>
+                <?php foreach (swissunihockey_ch_get_teams($club_id) as $team): ?>
+                    <li>
+                        <a href="#<?php echo $team['team_id']; ?>">
+                            <?php echo $team['text']; ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <div id="All">
+                <?php swissunihockey_ch_display_next_three_games(''); ?>
+            </div>
+            <?php foreach (swissunihockey_ch_get_teams($club_id) as $team): ?>
+                <div id="<?php echo $team['team_id']; ?>">
+                    <?php swissunihockey_ch_display_next_three_games($team['team_id']); ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
+
+function swissunihockey_ch_shortcode_5($season, $page) {
+    if (!$season) {
+        $season = $_REQUEST['season']?
+            $_REQUEST['season']:
+            get_option('swissunihockey_ch_season');
+    }
+
+    if (!$page) {
+        $page = $_REQUEST['page']?
+            $_REQUEST['page']:
+            '1';
+    }
+    $seasons = swissunihockey_ch_get_seasons();
+    ?>
+    <link
+        href="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/vendor/font-awesome/css/font-awesome.css"
+        rel="stylesheet"
+        >
+    <link
+        href="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/swissunihockey.ch.css"
+        rel="stylesheet"
+        >
+    <script
+        src="<?php echo plugins_url(
+            '/swissunihockey.ch'
+        ); ?>/swissunihockey.ch.js"
+        ></script>
+    <div class="swissunihockey-ch">
+        <form
+            action="<?php echo swissunihockey_ch_get_url(
+                array(
+                    'page' => '1',
+                    'pane' => '5',
+                    'season' => $season,
+                )
+            ); ?>"
+            enctype="multipart/form-data"
+            method="post"
+            >
+            <table class="table">
+                <tr>
+                    <td>
+                        <label for="season">Season</label>
+                    </td>
+                    <td>
+                        <select id="season" name="season">
+                            <?php foreach ($seasons as $s) : ?>
+                                <option
+                                    <?php if ($season === $s['season']) : ?>
+                                        selected="selected"
+                                    <?php endif; ?>
+                                    value="<?php echo $s['season']; ?>"
+                                    >
+                                    <?php echo $s['text'];?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="text-right">
+                        <input
+                            class="button-primary"
+                            type="submit"
+                            value="Change"
+                            >
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <?php
+        $games_slider = swissunihockey_ch_get_games_of_club($season, $page);
+        $games = $games_slider['items'];
+        $slider = $games_slider['slider'];
+        if (!empty($games)):
+        ?>
+            <p class="text-right">
+                <?php if (isset($slider['prev'])) : ?>
+                    <a
+                        class="pull-left"
+                        href="<?php echo swissunihockey_ch_get_url(
+                            array(
+                                'page' => $slider['prev']['set_in_context']['page'],
+                                'pane' => '5',
+                                'season' => $season,
+                            )
+                        ); ?>"
+                        >Previous</a>
+                <?php else: ?>
+                    <span class="pull-left line-through">Previous</span>
+                <?php endif; ?>
+                <?php if (isset($slider['next'])) : ?>
+                    <a
+                        href="<?php echo swissunihockey_ch_get_url(
+                            array(
+                                'page' => $slider['next']['set_in_context']['page'],
+                                'pane' => '5',
+                                'season' => $season,
+                            )
+                        ); ?>"
+                        >Next</a>
+                <?php else: ?>
+                    <span class="line-through">Next</span>
+                <?php endif; ?>
+            </p>
+            <table class="table">
+                <th class="text-center">Date/Time</th>
+                <th class="text-center">Location</th>
+                <th class="text-center">League</th>
+                <th class="text-center">Home</th>
+                <th class="text-center">Logo</th>
+                <th class="text-center">Away</th>
+                <th class="text-center">Logo</th>
+                <th class="text-center">Score</th>
+                <th class="text-center">Status</th>
+                <?php foreach ($games as $game) : ?>
+                    <?php
+                    $game_details = swissunihockey_ch_get_game($game['game_id'], false);
+                    $url = swissunihockey_ch_get_url(
+                        array(
+                            'pane' => '2',
+                            'league' => $game['league_id'],
+                            'game_class' => $game['game_class'],
+                            'season' => $season,
+                            'team_id' => '',
+                            'round' => '',
+                            'game_id' => $game['game_id'],
+                        )
+                    );
+                    $away_url = swissunihockey_ch_get_url(
+                        array(
+                            'pane' => '3',
+                            'league' => $game['league_id'],
+                            'game_class' => $game['game_class'],
+                            'season' => $season,
+                            'round' => '',
+                            'team_id' => $game_details['away']['id'],
+                        )
+                    );
+                    $home_url = swissunihockey_ch_get_url(
+                        array(
+                            'pane' => '3',
+                            'league' => $game['league_id'],
+                            'game_class' => $game['game_class'],
+                            'season' => $season,
+                            'team_id' => '',
+                            'round' => '',
+                            'team_id' => $game_details['home']['id'],
+                        )
+                    );
+                    ?>
+                    <tr>
+                        <td class="text-center">
+                            <a href="<?php echo $url; ?>">
+                                <?php echo $game['date'] . ' ' . $game['time']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="<?php echo $url; ?>">
+                                <?php echo $game['location']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="<?php echo $url; ?>">
+                                <?php echo $game['league']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="<?php echo $home_url; ?>">
+                                <?php echo $game['home']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                            href="<?php echo $home_url; ?>"
+                            title="<?php echo $game['home']; ?>"
+                            >
+                                <img src="<?php echo $game_details['home']['logo']; ?>"/>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                href="<?php echo $away_url; ?>"
+                                title="<?php echo $game['away']; ?>"
+                                >
+                                <img src="<?php echo $game_details['away']['logo']; ?>"/>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="<?php echo $away_url; ?>">
+                                <?php echo $game['away']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="<?php echo $url; ?>">
+                                <?php echo $game['score']; ?>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a
+                                class="icon" href="<?php echo $url; ?>"
+                                >
+                                <?php if ($game['status'] === 'Not yet started') : ?>
+                                    <i class="fa fa-clock-o"></i>
+                                <?php endif; ?>
+                                <?php if ($game['status'] === 'Ongoing') : ?>
+                                    <i class="fa fa-bullhorn"></i>
+                                <?php endif; ?>
+                                <?php if ($game['status'] === 'Finished') : ?>
+                                    <i class="fa fa-check"></i>
+                                <?php endif; ?>
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else: ?>
+            <p>There are no games scheduled in the selected time period.</p>
+        <?php endif; ?>
+        <?php
 }
 
 add_action('init', 'swissunihockey_ch_init');
