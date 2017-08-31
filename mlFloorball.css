@@ -1,119 +1,131 @@
-.swissunihockey-ch {
+.dashicons-mlFloorball:before {
+    background-color: transparent !important;
+    background-image: url('mlFloorball.png') !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    height: 20px !important;
+    padding: 7px 0 !important;
+    width: 20px !important;
+    content: '' !important;
+}
+
+.mlFloorball {
     margin-right: 20px !important;
 }
 
-.swissunihockey-ch a {
+.mlFloorball a {
     border: 0 !important;
     box-shadow: none !important;
     cursor: pointer !important;
 }
 
-.swissunihockey-ch h2 {
+.mlFloorball h2 {
     margin-top: 20px !important;
 }
 
-.swissunihockey-ch hr {
+.mlFloorball hr {
     margin-top: 20px !important;
 }
 
-.swissunihockey-ch p {
+.mlFloorball p {
     margin: 20px 0 0 0 !important;
 }
 
-.swissunihockey-ch pre {
+.mlFloorball pre {
     margin: 20px 0 0 0 !important;
 }
 
-.swissunihockey-ch table {
+.mlFloorball table {
     margin-top: 20px !important;
 }
 
-.swissunihockey-ch table tr td {
+.mlFloorball table tr td {
     position: relative !important;
 }
 
-.swissunihockey-ch table tr td select {
+.mlFloorball table tr td select {
     width: 100% !important;
 }
 
-.swissunihockey-ch ul {
+.mlFloorball ul {
     color: #777 !important;
     line-height: 23px !important;
     margin: 20px 0 0 0 !important;
 }
 
-.swissunihockey-ch .bordered {
+.mlFloorball .bordered {
     border-collapse: collapse !important;
 }
 
-.swissunihockey-ch .bordered td {
+.mlFloorball .bordered td {
     border: 1px solid #e5e5e5 !important;
     vertical-align: middle !important;
 }
 
-.swissunihockey-ch .bordered .top {
+.mlFloorball .bordered .top {
     vertical-align: top !important;
 }
 
-.swissunihockey-ch .error {
+.mlFloorball .error {
     margin: 20px 0 0 0 !important;
 }
 
-.swissunihockey-ch .error p {
+.mlFloorball .error p {
     margin: 10px 0 !important;
 }
 
-.swissunihockey-ch .icon {
+.mlFloorball .icon {
     text-decoration: none !important;
 }
 
-.swissunihockey-ch .line-through {
+.mlFloorball .line-through {
     text-decoration: line-through !important;
 }
 
-.swissunihockey-ch .narrow {
+.mlFloorball .narrow {
     white-space: nowrap !important;
     width: 100px !important;
 }
 
-.swissunihockey-ch .pull-left {
+.mlFloorball .pull-left {
     float: left !important;
 }
 
-.swissunihockey-ch .submit {
+.mlFloorball .submit {
     margin: 20px 0 !important;
     padding: 0 !important;
 }
 
-.swissunihockey-ch .text-center {
+.mlFloorball .text-center {
     text-align: center !important;
 }
 
-.swissunihockey-ch .text-center a {
+.mlFloorball .text-center a {
     display: block !important;
 }
 
-.swissunihockey-ch .text-center a img {
+.mlFloorball .text-center a img {
     display: inline-block !important;
 }
 
-.swissunihockey-ch .text-right {
+.mlFloorball .text-right {
     text-align: right !important;
 }
 
-.swissunihockey-ch .updated {
+.mlFloorball .updated {
     margin: 20px 0 0 0 !important;
 }
 
-.swissunihockey-ch .updated p {
+.mlFloorball .updated p {
     margin: 10px 0 !important;
 }
 
-.swissunihockey-ch .welcome-panel {
+.mlFloorball .welcome-panel {
     margin-top: 20px !important;
     padding: 0 20px 20px 20px !important;
 }
 
-.swissunihockey-ch .wide {
+.mlFloorball .wide {
     width: 100% !important;
 }
