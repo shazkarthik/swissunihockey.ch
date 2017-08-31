@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Plugin Name: swissunihockey.ch
- * Plugin URI: http://www.mahendrakalkura.com
+ * Plugin Name: mlFloorball
+ * Plugin URI: http://medialeg.ch/produkte/mlfloorball/
  * Description: ...coming soon...
- * Author: Mahendra Kalkura
+ * Author: medialeg
  * Version: 1.0
- * Author URI: http://www.mahendrakalkura.com
+ * Author URI: http://medialeg.ch/Products
  */
 
 require sprintf('%svendor/autoload.php', plugin_dir_path(__FILE__));
@@ -18,11 +18,11 @@ $driver = new Stash\Driver\FileSystem($options);
 
 $pool = new Stash\Pool($driver);
 
-$GLOBALS['swissunihockey.ch'] = array(
+$GLOBALS['mlFloorball'] = array(
     'pool' => $pool,
 );
 
-function swissunihockey_ch_usort_leagues($a, $b)
+function mlFloorball_usort_leagues($a, $b)
 {
     if ($a['text'] === $b['text']) {
         return 0;
@@ -30,7 +30,7 @@ function swissunihockey_ch_usort_leagues($a, $b)
     return ($a['text'] < $b['text'])? -1 : 1;
 }
 
-function swissunihockey_ch_usort_seasons($a, $b)
+function mlFloorball_usort_seasons($a, $b)
 {
     if ($a['text'] === $b['text']) {
         return 0;
@@ -38,7 +38,7 @@ function swissunihockey_ch_usort_seasons($a, $b)
     return ($a['text'] < $b['text'])? -1 : 1;
 }
 
-function swissunihockey_ch_usort_clubs($a, $b)
+function mlFloorball_usort_clubs($a, $b)
 {
     if ($a['text'] === $b['text']) {
         return 0;
@@ -46,7 +46,7 @@ function swissunihockey_ch_usort_clubs($a, $b)
     return ($a['text'] < $b['text'])? -1 : 1;
 }
 
-function swissunihockey_ch_usort_teams($a, $b)
+function mlFloorball_usort_teams($a, $b)
 {
     if ($a['text'] === $b['text']) {
         return 0;
@@ -54,7 +54,7 @@ function swissunihockey_ch_usort_teams($a, $b)
     return ($a['text'] < $b['text'])? -1 : 1;
 }
 
-function swissunihockey_ch_usort_table($a, $b)
+function mlFloorball_usort_table($a, $b)
 {
     if ($a['rank'] === $b['rank']) {
         return 0;
@@ -62,7 +62,7 @@ function swissunihockey_ch_usort_table($a, $b)
     return ($a['rank'] < $b['rank'])? -1 : 1;
 }
 
-function swissunihockey_ch_usort_games($a, $b)
+function mlFloorball_usort_games($a, $b)
 {
     if ($a['timestamp'] === $b['timestamp']) {
         return 0;
@@ -70,9 +70,9 @@ function swissunihockey_ch_usort_games($a, $b)
     return ($a['timestamp'] < $b['timestamp'])? -1 : 1;
 }
 
-function swissunihockey_ch_get_leagues()
+function mlFloorball_get_leagues()
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem('leagues');
+    $item = $GLOBALS['mlFloorball']['pool']->getItem('leagues');
     $leagues = $item->get();
     if ($item->isMiss()) {
         $leagues = array();
@@ -87,18 +87,18 @@ function swissunihockey_ch_get_leagues()
                 'text' => $entry['text'],
             );
         }
-        usort($leagues, 'swissunihockey_ch_usort_leagues');
+        usort($leagues, 'mlFloorball_usort_leagues');
         $item->set($leagues);
         $item->expiresAfter(864000);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $leagues;
 }
 
-function swissunihockey_ch_get_seasons()
+function mlFloorball_get_seasons()
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem('seasons');
+    $item = $GLOBALS['mlFloorball']['pool']->getItem('seasons');
     $seasons = $item->get();
     if ($item->isMiss()) {
         $seasons = array();
@@ -112,18 +112,18 @@ function swissunihockey_ch_get_seasons()
                 'text' => $entry['text'],
             );
         }
-        usort($seasons, 'swissunihockey_ch_usort_seasons');
+        usort($seasons, 'mlFloorball_usort_seasons');
         $item->set($seasons);
         $item->expiresAfter(864000);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $seasons;
 }
 
-function swissunihockey_ch_get_clubs()
+function mlFloorball_get_clubs()
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem('clubs');
+    $item = $GLOBALS['mlFloorball']['pool']->getItem('clubs');
     $clubs = $item->get();
     if ($item->isMiss()) {
         $clubs = array();
@@ -136,21 +136,21 @@ function swissunihockey_ch_get_clubs()
             $clubs[] = array(
                 'text' => $entry['text'],
                 'club_id' => $club_id,
-                'teams' => swissunihockey_ch_get_teams($club_id),
+                'teams' => mlFloorball_get_teams($club_id),
             );
         }
-        usort($clubs, 'swissunihockey_ch_usort_clubs');
+        usort($clubs, 'mlFloorball_usort_clubs');
         $item->set($clubs);
         $item->expiresAfter(864000);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $clubs;
 }
 
-function swissunihockey_ch_get_teams($club_id)
+function mlFloorball_get_teams($club_id)
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
         sprintf('teams/%s', $club_id)
     );
     $teams = $item->get();
@@ -169,18 +169,18 @@ function swissunihockey_ch_get_teams($club_id)
                 'team_id' => (string) $row['team_id'],
             );
         }
-        usort($teams, 'swissunihockey_ch_usort_teams');
+        usort($teams, 'mlFloorball_usort_teams');
         $item->set($teams);
         $item->expiresAfter(864000);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $teams;
 }
 
-function swissunihockey_ch_get_table($league, $game_class, $season)
+function mlFloorball_get_table($league, $game_class, $season)
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
         sprintf('table/%s/%s/%s', $league, $game_class, $season)
     );
     $table = $item->get();
@@ -217,18 +217,18 @@ function swissunihockey_ch_get_table($league, $game_class, $season)
                 ),
             );
         }
-        usort($table, 'swissunihockey_ch_usort_table');
+        usort($table, 'mlFloorball_usort_table');
         $item->set($table);
         $item->expiresAfter(86400);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $table;
 }
 
-function swissunihockey_ch_get_games($league, $game_class, $season, $round)
+function mlFloorball_get_games($league, $game_class, $season, $round)
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
         sprintf('games/%s/%s/%s/%s', $league, $game_class, $season, $round)
     );
     $games = $item->get();
@@ -255,20 +255,20 @@ function swissunihockey_ch_get_games($league, $game_class, $season, $round)
         );
         foreach ((array) $body['data']['regions'][0]['rows'] as $row) {
             $game_id = (string) $row['cells'][0]['link']['ids'][0];
-            $games['items'][] = swissunihockey_ch_get_game($game_id, false);
+            $games['items'][] = mlFloorball_get_game($game_id, false);
         }
-        usort($games['items'], 'swissunihockey_ch_usort_games');
+        usort($games['items'], 'mlFloorball_usort_games');
         $item->set($games);
         $item->expiresAfter(86400);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $games;
 }
 
-function swissunihockey_ch_get_game($game_id, $with_events)
+function mlFloorball_get_game($game_id, $with_events)
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
         sprintf('game/%s/%s', $game_id, $with_events? '1': '0')
     );
     $game = $item->get();
@@ -321,20 +321,20 @@ function swissunihockey_ch_get_game($game_id, $with_events)
             'spectators' => $row['cells'][10]['text'][0],
         );
         if ($with_events) {
-            $game_events = swissunihockey_ch_get_game_events($game_id);
+            $game_events = mlFloorball_get_game_events($game_id);
             $game['events'] = $game_events;
         }
         $item->set($game);
         $item->expiresAfter(86400);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $game;
 }
 
-function swissunihockey_ch_get_game_events($game_id)
+function mlFloorball_get_game_events($game_id)
 {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
         sprintf('game_events/%s', $game_id)
     );
     $game = $item->get();
@@ -358,13 +358,13 @@ function swissunihockey_ch_get_game_events($game_id)
         }
         $item->set($game_events);
         $item->expiresAfter(60);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $game_events;
 }
 
-function swissunihockey_ch_get_url($array)
+function mlFloorball_get_url($array)
 {
     $url = $_SERVER['REQUEST_URI'];
     $url = remove_query_arg(
@@ -383,80 +383,80 @@ function swissunihockey_ch_get_url($array)
     return $url;
 }
 
-function swissunihockey_ch_init()
+function mlFloorball_init()
 {
-    add_action('wp_enqueue_scripts', 'swissunihockey_ch_scripts');
-    add_action('wp_enqueue_scripts', 'swissunihockey_ch_styles');
+    add_action('wp_enqueue_scripts', 'mlFloorball_scripts');
+    add_action('wp_enqueue_scripts', 'mlFloorball_styles');
 }
 
-function swissunihockey_ch_admin_init()
+function mlFloorball_admin_init()
 {
-    add_action('admin_print_scripts', 'swissunihockey_ch_scripts');
-    add_action('admin_print_styles', 'swissunihockey_ch_styles');
+    add_action('admin_print_scripts', 'mlFloorball_scripts');
+    add_action('admin_print_styles', 'mlFloorball_styles');
 }
 
-function swissunihockey_ch_scripts()
+function mlFloorball_scripts()
 {
     wp_enqueue_script(
         'all_js',
-        sprintf('%s/swissunihockey.ch.js', plugins_url('/swissunihockey.ch')),
+        sprintf('%s/mlFloorball.js', plugins_url('/mlFloorball')),
         array('jquery')
     );
 }
 
-function swissunihockey_ch_styles()
+function mlFloorball_styles()
 {
     wp_enqueue_style(
         'all_css',
-        sprintf('%s/swissunihockey.ch.css', plugins_url('/swissunihockey.ch'))
+        sprintf('%s/mlFloorball.css', plugins_url('/mlFloorball'))
     );
 }
 
-function swissunihockey_ch_admin_menu()
+function mlFloorball_admin_menu()
 {
     add_menu_page(
-        'swissunihockey.ch',
-        'swissunihockey.ch',
+        'mlFloorball',
+        'mlFloorball',
         'manage_options',
-        '/swissunihockey.ch',
-        'swissunihockey_ch_options',
-        ''
+        '/mlFloorball',
+        'mlFloorball_options',
+        'dashicons-mlFloorball'
     );
     add_submenu_page(
-        '/swissunihockey.ch',
+        '/mlFloorball',
         'Options',
         'Options',
         'manage_options',
-        '/swissunihockey.ch',
-        'swissunihockey_ch_options'
+        '/mlFloorball',
+        'mlFloorball_options'
     );
     add_submenu_page(
-        '/swissunihockey.ch',
+        '/mlFloorball',
         'F.A.Q.',
         'F.A.Q.',
         'manage_options',
-        '/swissunihockey.ch/faq',
-        'swissunihockey_ch_faq'
+        '/mlFloorball/faq',
+        'mlFloorball_faq'
     );
 }
 
-function swissunihockey_ch_flashes()
+function mlFloorball_flashes()
 {
     ?>
-    <?php if (!empty($_SESSION['swissunihockey.ch']['flashes'])) : ?>
+    <?php if (!empty($_SESSION['mlFloorball']['flashes'])) : ?>
         <?php foreach (
-            $_SESSION['swissunihockey.ch']['flashes'] AS $key => $value
+            $_SESSION['mlFloorball']['flashes'] AS $key => $value
         ) : ?>
             <div class="<?php echo $key; ?>">
                 <p><strong><?php echo $value; ?></strong></p>
             </div>
         <?php endforeach; ?>
-        <?php $_SESSION['swissunihockey.ch']['flashes'] = array(); ?>
+        <?php $_SESSION['mlFloorball']['flashes'] = array(); ?>
     <?php endif; ?>
     <?php
 }
 
-function swissunihockey_ch_options()
+function mlFloorball_options()
 {
     if (!current_user_can('manage_options')) {
         wp_die('You do not have permissions to access this page.');
@@ -464,32 +464,32 @@ function swissunihockey_ch_options()
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         update_option(
-            'swissunihockey_ch_league_game_class',
+            'mlFloorball_league_game_class',
             $_REQUEST['league_game_class'],
             true
         );
         update_option(
-            'swissunihockey_ch_season',
+            'mlFloorball_season',
             $_REQUEST['season'],
             true
         );
         update_option(
-            'swissunihockey_ch_club_id',
+            'mlFloorball_club_id',
             $_REQUEST['club_id'],
             true
         );
         update_option(
-            'swissunihockey_ch_team_id',
+            'mlFloorball_team_id',
             $_REQUEST['team_id'],
             true
         );
-        $_SESSION['swissunihockey.ch']['flashes'] = array(
+        $_SESSION['mlFloorball']['flashes'] = array(
             'updated' => 'Your options were updated successfully.',
         );
         ?>
         <meta
             content="0;url=<?php echo admin_url(
-                'admin.php?page=swissunihockey.ch'
+                'admin.php?page=mlFloorball'
             ); ?>"
             http-equiv="refresh"
             >
@@ -497,21 +497,21 @@ function swissunihockey_ch_options()
         die();
     }
 
-    $league_game_class = get_option('swissunihockey_ch_league_game_class');
-    $season = get_option('swissunihockey_ch_season');
-    $club_id = get_option('swissunihockey_ch_club_id');
-    $team_id = get_option('swissunihockey_ch_team_id');
+    $league_game_class = get_option('mlFloorball_league_game_class');
+    $season = get_option('mlFloorball_season');
+    $club_id = get_option('mlFloorball_club_id');
+    $team_id = get_option('mlFloorball_team_id');
 
-    $leagues = swissunihockey_ch_get_leagues();
-    $seasons = swissunihockey_ch_get_seasons();
-    $clubs = swissunihockey_ch_get_clubs();
+    $leagues = mlFloorball_get_leagues();
+    $seasons = mlFloorball_get_seasons();
+    $clubs = mlFloorball_get_clubs();
     ?>
-    <div class="swissunihockey-ch">
-        <h2>swissunihockey.ch :: Options</h2>
-        <?php swissunihockey_ch_flashes(); ?>
+    <div class="mlFloorball">
+        <h2>mlFloorball :: Options</h2>
+        <?php mlFloorball_flashes(); ?>
         <form
             action="<?php echo admin_url(
-                'admin.php?page=swissunihockey.ch'
+                'admin.php?page=mlFloorball'
             ); ?>"
             enctype="multipart/form-data"
             method="post"
@@ -621,15 +621,15 @@ function swissunihockey_ch_options()
     <?php
 }
 
-function swissunihockey_ch_faq()
+function mlFloorball_faq()
 {
     if (!current_user_can('manage_options')) {
         wp_die('You do not have permissions to access this page.');
     }
 
     ?>
-    <div class="swissunihockey-ch">
-        <h2>swissunihockey.ch :: Frequently Asked Questions</h2>
+    <div class="mlFloorball">
+        <h2>mlFloorball :: Frequently Asked Questions</h2>
         <div class="welcome-panel">
             <h2>How to obtain a <strong>shortcode?</strong></h2>
             <hr>
@@ -637,20 +637,20 @@ function swissunihockey_ch_faq()
                 You can obtain a <strong>shortcode</strong> by embedding the
                 following text in your page(s)/post(s) :
             </p>
-            <pre>[swissunihockey_ch]</pre>
+            <pre>[mlFloorball]</pre>
         </div>
     </div>
     <?php
 }
 
-function swissunihockey_ch_shortcode()
+function mlFloorball_shortcode()
 {
     $pane = $_REQUEST['pane']? $_REQUEST['pane']: '';
     if ($pane !== '1' and $pane !== '2' and $pane !== '3' and $pane !== '4' and $pane !== '5') {
         $pane = '1';
     }
     if ($pane === '1') {
-        swissunihockey_ch_shortcode_1(
+        mlFloorball_shortcode_1(
             $_REQUEST['league']? $_REQUEST['league']: '',
             $_REQUEST['game_class']? $_REQUEST['game_class']: '',
             $_REQUEST['season']? $_REQUEST['season']: '',
@@ -659,7 +659,7 @@ function swissunihockey_ch_shortcode()
         );
     }
     if ($pane === '2') {
-        swissunihockey_ch_shortcode_2(
+        mlFloorball_shortcode_2(
             $_REQUEST['league']? $_REQUEST['league']: '',
             $_REQUEST['game_class']? $_REQUEST['game_class']: '',
             $_REQUEST['season']? $_REQUEST['season']: '',
@@ -669,7 +669,7 @@ function swissunihockey_ch_shortcode()
         );
     }
     if ($pane === '3') {
-        swissunihockey_ch_shortcode_3(
+        mlFloorball_shortcode_3(
             $_REQUEST['league']? $_REQUEST['league']: '',
             $_REQUEST['game_class']? $_REQUEST['game_class']: '',
             $_REQUEST['season']? $_REQUEST['season']: '',
@@ -678,27 +678,27 @@ function swissunihockey_ch_shortcode()
         );
     }
     if ($pane === '4') {
-        swissunihockey_ch_shortcode_4(
+        mlFloorball_shortcode_4(
             isset($_REQUEST['team_id'])? $_REQUEST['team_id']: null
         );
     }
     if ($pane === '5') {
-        swissunihockey_ch_shortcode_5(
+        mlFloorball_shortcode_5(
             isset($_REQUEST['season'])? $_REQUEST['season']: date('Y'),
             isset($_REQUEST['page'])? $_REQUEST['page']: '1'
         );
     }
 }
 
-function swissunihockey_ch_get_games_of_club($season, $page) {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
-        sprintf('games/%s/%s/%s', get_option('swissunihockey_ch_club_id'), $season, $page)
+function mlFloorball_get_games_of_club($season, $page) {
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
+        sprintf('games/%s/%s/%s', get_option('mlFloorball_club_id'), $season, $page)
     );
     $games = $item->get();
     if ($item->isMiss()) {
         $url = sprintf(
             'https://api-v2.swissunihockey.ch/api/games?club_id=%s&season=%s&mode=club',
-            get_option('swissunihockey_ch_club_id'),
+            get_option('mlFloorball_club_id'),
             $season
         );
         if ($page !== '1') {
@@ -741,15 +741,15 @@ function swissunihockey_ch_get_games_of_club($season, $page) {
         }
         $item->set($games);
         $item->expiresAfter(86400);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     }
 
     return $games;
 }
 
-function swissunihockey_ch_display_next_three_games($team_id) {
-    $item = $GLOBALS['swissunihockey.ch']['pool']->getItem(
-        sprintf('games/%s/next-three-games/%s/%s', get_option('swissunihockey_ch_club_id'), date('Y'), $team_id)
+function mlFloorball_display_next_three_games($team_id) {
+    $item = $GLOBALS['mlFloorball']['pool']->getItem(
+        sprintf('games/%s/next-three-games/%s/%s', get_option('mlFloorball_club_id'), date('Y'), $team_id)
     );
     $rows = $item->get();
     if ($item->isMiss()) {
@@ -764,7 +764,7 @@ function swissunihockey_ch_display_next_three_games($team_id) {
         } else {
             $response = wp_remote_get(sprintf(
                 'https://api-v2.swissunihockey.ch/api/games?club_id=%s&season=%s&mode=club',
-                get_option('swissunihockey_ch_club_id'),
+                get_option('mlFloorball_club_id'),
                 date('Y')
             ));
         }
@@ -774,12 +774,13 @@ function swissunihockey_ch_display_next_three_games($team_id) {
         }
         $item->set($rows);
         $item->expiresAfter(86400);
-        $GLOBALS['swissunihockey.ch']['pool']->save($item);
+        $GLOBALS['mlFloorball']['pool']->save($item);
     } ?>
     <h1 class="text-center">Next 3 Games</h1>
     <?php
+    $index = 0;
     foreach ($rows as $row):
-        $game = swissunihockey_ch_get_game($row['link']['ids'][0], false);
+        $game = mlFloorball_get_game($row['link']['ids'][0], false);
         if ($game['status'] === 'Not yet started'): ?>
             <?php
                 if ($index > 2) {
@@ -825,7 +826,7 @@ function swissunihockey_ch_display_next_three_games($team_id) {
     <?php
 }
 
-function swissunihockey_ch_shortcode_1(
+function mlFloorball_shortcode_1(
     $league,
     $game_class,
     $season,
@@ -836,27 +837,27 @@ function swissunihockey_ch_shortcode_1(
     if (!$league or !$game_class) {
         $league_game_class = $_REQUEST['league_game_class']?
             $_REQUEST['league_game_class']:
-            get_option('swissunihockey_ch_league_game_class');
+            get_option('mlFloorball_league_game_class');
         list($league, $game_class) = explode('-', $league_game_class);
     }
 
     if (!$season) {
         $season = $_REQUEST['season']?
             $_REQUEST['season']:
-            get_option('swissunihockey_ch_season');
+            get_option('mlFloorball_season');
     }
 
     if (!$team_id) {
         $team_id = $_REQUEST['team_id']?
             $_REQUEST['team_id']:
-            get_option('swissunihockey_ch_team_id');
+            get_option('mlFloorball_team_id');
     }
 
-    $leagues = swissunihockey_ch_get_leagues();
-    $seasons = swissunihockey_ch_get_seasons();
-    $clubs = swissunihockey_ch_get_clubs();
+    $leagues = mlFloorball_get_leagues();
+    $seasons = mlFloorball_get_seasons();
+    $clubs = mlFloorball_get_clubs();
 
-    $games = swissunihockey_ch_get_games(
+    $games = mlFloorball_get_games(
         $league, $game_class, $season, $round
     );
 
@@ -886,24 +887,24 @@ function swissunihockey_ch_shortcode_1(
     ?>
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
+            '/mlFloorball'
         ); ?>/vendor/font-awesome/css/font-awesome.css"
         rel="stylesheet"
         >
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.css"
+            '/mlFloorball'
+        ); ?>/mlFloorball.css"
         rel="stylesheet"
         >
     <script
         src="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.js"
+            '/mlFloorball'
+        ); ?>/mlFloorball.js"
         ></script>
-    <div class="swissunihockey-ch">
+    <div class="mlFloorball">
         <form
-            action="<?php echo swissunihockey_ch_get_url(
+            action="<?php echo mlFloorball_get_url(
                 array(
                     'pane' => '1',
                 )
@@ -989,7 +990,7 @@ function swissunihockey_ch_shortcode_1(
                 <tr>
                     <td>
                         <a
-                            href="<?php echo swissunihockey_ch_get_url($url); ?>"
+                            href="<?php echo mlFloorball_get_url($url); ?>"
                             >Table</a>
                     </td>
                     <td class="text-right">
@@ -1006,7 +1007,7 @@ function swissunihockey_ch_shortcode_1(
             <?php if ($games['round']['previous']) : ?>
                 <a
                     class="pull-left"
-                    href="<?php echo swissunihockey_ch_get_url(
+                    href="<?php echo mlFloorball_get_url(
                         array(
                             'pane' => '1',
                             'league' => $league,
@@ -1022,7 +1023,7 @@ function swissunihockey_ch_shortcode_1(
             <?php endif; ?>
             <?php if ($games['round']['next']) : ?>
                 <a
-                    href="<?php echo swissunihockey_ch_get_url(
+                    href="<?php echo mlFloorball_get_url(
                         array(
                             'pane' => '1',
                             'league' => $league,
@@ -1042,7 +1043,7 @@ function swissunihockey_ch_shortcode_1(
                 <?php foreach ($games['items'] as $game) : ?>
                     <?php
                     $status = $game['status'];
-                    $url = swissunihockey_ch_get_url(
+                    $url = mlFloorball_get_url(
                         array(
                             'pane' => '2',
                             'league' => $league,
@@ -1125,7 +1126,7 @@ function swissunihockey_ch_shortcode_1(
     <?php
 }
 
-function swissunihockey_ch_shortcode_2(
+function mlFloorball_shortcode_2(
     $league,
     $game_class,
     $season,
@@ -1133,13 +1134,13 @@ function swissunihockey_ch_shortcode_2(
     $round,
     $game_id
 ) {
-    $game = swissunihockey_ch_get_game($game_id, true);
+    $game = mlFloorball_get_game($game_id, true);
     ?>
-    <div class="swissunihockey-ch">
+    <div class="mlFloorball">
         <p>
             <a
                 href="<?php
-                echo swissunihockey_ch_get_url(
+                echo mlFloorball_get_url(
                     array(
                         'pane' => '1',
                         'league' => $league,
@@ -1201,20 +1202,20 @@ function swissunihockey_ch_shortcode_2(
     <?php
 }
 
-function swissunihockey_ch_shortcode_3(
+function mlFloorball_shortcode_3(
     $league,
     $game_class,
     $season,
     $team_id,
     $round
 ) {
-    $table = swissunihockey_ch_get_table($league, $game_class, $season);
+    $table = mlFloorball_get_table($league, $game_class, $season);
     ?>
-    <div class="swissunihockey-ch">
+    <div class="mlFloorball">
         <p>
             <a
                 href="<?php
-                echo swissunihockey_ch_get_url(
+                echo mlFloorball_get_url(
                     array(
                         'pane' => '1',
                         'league' => $league,
@@ -1282,40 +1283,40 @@ function swissunihockey_ch_shortcode_3(
     <?php
 }
 
-function swissunihockey_ch_shortcode_4($team_id='') {
+function mlFloorball_shortcode_4($team_id='') {
 
-    $club_id = get_option('swissunihockey_ch_club_id');
+    $club_id = get_option('mlFloorball_club_id');
 
     ?>
     <link
-        href="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery-tabs/jquery-ui.css"
+        href="<?php echo plugins_url('/mlFloorball'); ?>/vendor/jquery-tabs/jquery-ui.css"
         rel="stylesheet"
         >
-    <script src="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery/dist/jquery.js"></script>
-    <script src="<?php echo plugins_url('/swissunihockey.ch'); ?>/vendor/jquery-tabs/jquery-ui.js"></script>
+    <script src="<?php echo plugins_url('/mlFloorball'); ?>/vendor/jquery/dist/jquery.js"></script>
+    <script src="<?php echo plugins_url('/mlFloorball'); ?>/vendor/jquery-tabs/jquery-ui.js"></script>
     <script type="text/javascript">
         jQuery(function() {
-            jQuery('.swissunihockey-ch').find('#tabs').tabs();
+            jQuery('.mlFloorball').find('#tabs').tabs();
          });
     </script>
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
+            '/mlFloorball'
         ); ?>/vendor/font-awesome/css/font-awesome.css"
         rel="stylesheet"
         >
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.css"
+            '/mlFloorball'
+        ); ?>/mlFloorball.css"
         rel="stylesheet"
         >
     <script
         src="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.js"
+            '/mlFloorball'
+        ); ?>/mlFloorball.js"
         ></script>
-    <div class="swissunihockey-ch">
+    <div class="mlFloorball">
         <div id="tabs">
             <ul>
                 <li>
@@ -1323,7 +1324,7 @@ function swissunihockey_ch_shortcode_4($team_id='') {
                         All
                     </a>
                 </li>
-                <?php foreach (swissunihockey_ch_get_teams($club_id) as $team): ?>
+                <?php foreach (mlFloorball_get_teams($club_id) as $team): ?>
                     <li>
                         <a href="#<?php echo $team['team_id']; ?>">
                             <?php echo $team['text']; ?>
@@ -1332,11 +1333,11 @@ function swissunihockey_ch_shortcode_4($team_id='') {
                 <?php endforeach; ?>
             </ul>
             <div id="All">
-                <?php swissunihockey_ch_display_next_three_games(''); ?>
+                <?php mlFloorball_display_next_three_games(''); ?>
             </div>
-            <?php foreach (swissunihockey_ch_get_teams($club_id) as $team): ?>
+            <?php foreach (mlFloorball_get_teams($club_id) as $team): ?>
                 <div id="<?php echo $team['team_id']; ?>">
-                    <?php swissunihockey_ch_display_next_three_games($team['team_id']); ?>
+                    <?php mlFloorball_display_next_three_games($team['team_id']); ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -1344,11 +1345,11 @@ function swissunihockey_ch_shortcode_4($team_id='') {
     <?php
 }
 
-function swissunihockey_ch_shortcode_5($season, $page) {
+function mlFloorball_shortcode_5($season, $page) {
     if (!$season) {
         $season = $_REQUEST['season']?
             $_REQUEST['season']:
-            get_option('swissunihockey_ch_season');
+            get_option('mlFloorball_season');
     }
 
     if (!$page) {
@@ -1356,28 +1357,28 @@ function swissunihockey_ch_shortcode_5($season, $page) {
             $_REQUEST['page']:
             '1';
     }
-    $seasons = swissunihockey_ch_get_seasons();
+    $seasons = mlFloorball_get_seasons();
     ?>
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
+            '/mlFloorball'
         ); ?>/vendor/font-awesome/css/font-awesome.css"
         rel="stylesheet"
         >
     <link
         href="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.css"
+            '/mlFloorball'
+        ); ?>/mlFloorball.css"
         rel="stylesheet"
         >
     <script
         src="<?php echo plugins_url(
-            '/swissunihockey.ch'
-        ); ?>/swissunihockey.ch.js"
+            '/mlFloorball'
+        ); ?>/mlFloorball.js"
         ></script>
-    <div class="swissunihockey-ch">
+    <div class="mlFloorball">
         <form
-            action="<?php echo swissunihockey_ch_get_url(
+            action="<?php echo mlFloorball_get_url(
                 array(
                     'page' => '1',
                     'pane' => '5',
@@ -1420,7 +1421,7 @@ function swissunihockey_ch_shortcode_5($season, $page) {
             </table>
         </form>
         <?php
-        $games_slider = swissunihockey_ch_get_games_of_club($season, $page);
+        $games_slider = mlFloorball_get_games_of_club($season, $page);
         $games = $games_slider['items'];
         $slider = $games_slider['slider'];
         if (!empty($games)):
@@ -1429,7 +1430,7 @@ function swissunihockey_ch_shortcode_5($season, $page) {
                 <?php if (isset($slider['prev'])) : ?>
                     <a
                         class="pull-left"
-                        href="<?php echo swissunihockey_ch_get_url(
+                        href="<?php echo mlFloorball_get_url(
                             array(
                                 'page' => $slider['prev']['set_in_context']['page'],
                                 'pane' => '5',
@@ -1442,7 +1443,7 @@ function swissunihockey_ch_shortcode_5($season, $page) {
                 <?php endif; ?>
                 <?php if (isset($slider['next'])) : ?>
                     <a
-                        href="<?php echo swissunihockey_ch_get_url(
+                        href="<?php echo mlFloorball_get_url(
                             array(
                                 'page' => $slider['next']['set_in_context']['page'],
                                 'pane' => '5',
@@ -1466,8 +1467,8 @@ function swissunihockey_ch_shortcode_5($season, $page) {
                 <th class="text-center">Status</th>
                 <?php foreach ($games as $game) : ?>
                     <?php
-                    $game_details = swissunihockey_ch_get_game($game['game_id'], false);
-                    $url = swissunihockey_ch_get_url(
+                    $game_details = mlFloorball_get_game($game['game_id'], false);
+                    $url = mlFloorball_get_url(
                         array(
                             'pane' => '2',
                             'league' => $game['league_id'],
@@ -1478,7 +1479,7 @@ function swissunihockey_ch_shortcode_5($season, $page) {
                             'game_id' => $game['game_id'],
                         )
                     );
-                    $away_url = swissunihockey_ch_get_url(
+                    $away_url = mlFloorball_get_url(
                         array(
                             'pane' => '3',
                             'league' => $game['league_id'],
@@ -1488,7 +1489,7 @@ function swissunihockey_ch_shortcode_5($season, $page) {
                             'team_id' => $game_details['away']['id'],
                         )
                     );
-                    $home_url = swissunihockey_ch_get_url(
+                    $home_url = mlFloorball_get_url(
                         array(
                             'pane' => '3',
                             'league' => $game['league_id'],
@@ -1571,9 +1572,9 @@ function swissunihockey_ch_shortcode_5($season, $page) {
         <?php
 }
 
-add_action('init', 'swissunihockey_ch_init');
+add_action('init', 'mlFloorball_init');
 
-add_action('admin_init', 'swissunihockey_ch_admin_init');
-add_action('admin_menu', 'swissunihockey_ch_admin_menu');
+add_action('admin_init', 'mlFloorball_admin_init');
+add_action('admin_menu', 'mlFloorball_admin_menu');
 
-add_shortcode('swissunihockey_ch', 'swissunihockey_ch_shortcode');
+add_shortcode('mlFloorball', 'mlFloorball_shortcode');
